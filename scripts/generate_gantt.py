@@ -130,8 +130,7 @@ def create_chart(issues):
             )
     else:
         lines.append("All issues have valid schedule dates.")
-    lines.extend(["", "## Date format", "", "Add these lines to the issue description:", "",
-                  "```text", "Start date: 2026-11-23", "Due date: 2026-12-05", "```", "",
+    lines.extend(["", "## Scheduling", "", "Set Start date and Target date directly in the issue sidebar under Fields.", "",
                   "Closing an issue marks its bar as completed. Issues without both valid dates remain in the table; no dates are fabricated.", ""])
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text("\n".join(lines), encoding="utf-8")
