@@ -1,34 +1,29 @@
-# Automated GitHub Issues Gantt
+# Automated issue-field Gantt
 
-This feature adds a Mermaid Gantt chart to `docs/GANTT.md`.
+This feature generates `docs/GANTT.md` from the **Fields** sidebar on GitHub issues.
 
 ## How to schedule an issue
 
-Add these two lines anywhere in an issue description (ISO 8601 dates):
+1. Open any issue in `nk25719/FunctionGeneratorESP32`.
+2. Under **Fields** set **Start date** and **Target date** (not project custom fields).
+3. The resulting Gantt uses these dates inclusive of both endpoints. Closed issues are marked done.
 
-```text
-Start date: 2026-11-23
-Due date: 2026-12-05
-```
-
-Issue state controls the completion marker; closed issues are shown as `done`. Issues missing dates, with invalid dates, or with a due date before the start date appear below the chart instead of receiving guessed dates.
+For example, issue #19 has Start date 2026-11-22 and Target date 2026-11-25, so its Gantt bar spans four days.
 
 ## Automation
 
-`.github/workflows/gantt.yml` runs when an issue is opened, edited, closed, reopened, or deleted; once daily; or on manual dispatch. It regenerates `docs/GANTT.md` and commits changes to `main` once the PR is merged.
+`.github/workflows/gantt.yml` runs on issue creation, editing, closing, reopening, deletion, and native issue field additions/changes/removals (`field_added` and `field_removed`), plus daily and manual execution. It commits the generated Gantt to `main` after the PR is merged.
 
-## Project #7 date fields
+The generator uses the issue field values REST API with GitHub API version `2026-03-10`: `GET /repos/{owner}/{repo}/issues/{issue_number}/issue-field-values`. The built-in `GITHUB_TOKEN` needs `issues: read`; no personal access token or Project #7 integration is required.
 
-The generator now supports GitHub Project #7's **Start date** and **Target date** fields, with issue-description dates as fallback. Project dates take precedence when configured.
+If a date is not set or the end date precedes the start date, the issue remains in the unscheduled table. API access failures fail the job rather than silently reporting issues as unscheduled.
 
-To enable them, create a fine-grained or classic personal access token authorized to read your user-owned GitHub Project (for a classic PAT, use the `read:project` scope). Store it as the repository Actions secret `PROJECT_TOKEN` under **Settings → Secrets and variables → Actions**. Keep the token private. The default `GITHUB_TOKEN` alone generally cannot access user-owned Projects V2.
+## Test
 
-Until `PROJECT_TOKEN` is configured, the workflow continues to use issue-body dates. On a permission failure, the workflow reports an error rather than silently making up dates. Project updates alone do not fire repository issue events, so the daily cron or **Run workflow** button is needed to refresh the chart immediately after editing project-only dates.
-
-## Testing locally
+Run with `GITHUB_TOKEN` set to a token with issues-read access:
 
 ```sh
-GITHUB_REPOSITORY=nk25719/FunctionGeneratorESP32 GITHUB_TOKEN="$(gh auth token)" python3 scripts/generate_gantt.py
+GITHUB_REPOSITORY=nk25719/FunctionGeneratorESP32 python3 scripts/generate_gantt.py
 ```
 
-Check `docs/GANTT.md` afterward. GitHub Actions must be allowed to write repository contents, and branch rules must permit its commits; otherwise the workflow reports an error without modifying issues.
+Ensure GitHub Actions is enabled and allowed to write contents; restrictive branch rules may require a PR publishing strategy instead of direct bot commits.
