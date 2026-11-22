@@ -2,7 +2,7 @@ name: Generate GitHub Issues Gantt
 
 on:
   issues:
-    types: [opened, edited, closed, reopened, deleted]
+    types: [opened, edited, closed, reopened, deleted, field_added, field_removed]
   workflow_dispatch:
   schedule:
     - cron: "15 6 * * *"
@@ -27,7 +27,6 @@ jobs:
       - name: Generate Mermaid Gantt from issues
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python3 scripts/generate_gantt.py
       - name: Commit chart when changed
