@@ -33,91 +33,37 @@ def fetch_issues():
 
 
 
-def fetch_project_dates():
-    """Return Project V2 date fields by issue number, if a project token is available."""
-    token = os.environ.get("PROJECT_TOKEN", "")
-    if not token:
-        print("Project date sync unavailable: PROJECT_TOKEN not configured.")
-        return {}
-    query = """
-    query($login: String!, $number: Int!, $cursor: String) {
-      user(login: $login) {
-        projectV2(number: $number) {
-          items(first: 100, after: $cursor) {
-            pageInfo { hasNextPage endCursor }
-            nodes {
-              content {
-                ... on Issue {
-                  number
-                  repository { nameWithOwner }
-                }
-              }
-              fieldValues(first: 50) {
-                nodes {
-                  ... on ProjectV2ItemFieldDateValue {
-                    date
-                    field { ... on ProjectV2FieldCommon { name } }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+
+def fetch_issue_field_dates(issue_number):
+    """Read issue-level Fields from GitHub REST (not Projects fields)."""
+    url = f"https://api.github.com/repos/{REPO}/issues/{issue_number}/issue-field-values?per_page=100"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2026-03-10",
+        "User-Agent": "github-issues-gantt",
     }
-    """
-    dates = {}
-    cursor = None
-    while True:
-        payload = json.dumps({
-            "query": query,
-            "variables": {"login": "nk25719", "number": 7, "cursor": cursor},
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            "https://api.github.com/graphql", payload,
-            {"Authorization": f"Bearer {token}",
-             "Accept": "application/vnd.github+json",
-             "Content-Type": "application/json",
-             "User-Agent": "github-issues-gantt"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=30) as response:
-            data = json.load(response)
-        if data.get("errors"):
-            raise RuntimeError(f"GitHub Projects API: {data['errors']}")
-        project = (data.get("data") or {}).get("user", {}) or {}
-        project = project.get("projectV2")
-        if not project:
-            raise RuntimeError("GitHub Project #7 not accessible to PROJECT_TOKEN")
-        items = project["items"]
-        for item in items["nodes"]:
-            issue = item.get("content") or {}
-            if issue.get("repository", {}).get("nameWithOwner", "").lower() != REPO.lower():
-                continue
-            if not issue.get("number"):
-                continue
-            fields = {}
-            for value in item.get("fieldValues", {}).get("nodes", []):
-                field = (value or {}).get("field") or {}
-                if field.get("name") and value.get("date"):
-                    fields[field["name"].strip().lower()] = value["date"]
-            dates[issue["number"]] = fields
-        page = items["pageInfo"]
-        if not page["hasNextPage"]:
-            break
-        cursor = page["endCursor"]
-    return dates
+    if TOKEN:
+        headers["Authorization"] = f"Bearer {TOKEN}"
+    with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as resp:
+        rows = json.load(resp)
+    return {
+        str(row.get("issue_field_name", "")).strip().lower(): row["value"]
+        for row in rows
+        if row.get("data_type") == "date"
+        and row.get("issue_field_name", "").strip().lower() in ("start date", "target date")
+        and isinstance(row.get("value"), str)
+    }
 
 
-def project_date(values, names):
-    for name in names:
-        raw = values.get(name)
-        if raw:
-            try:
-                return dt.date.fromisoformat(raw)
-            except ValueError:
-                pass
-    return None
+def field_date(values, name):
+    raw = values.get(name)
+    if not raw:
+        return None
+    try:
+        return dt.date.fromisoformat(raw)
+    except ValueError:
+        return None
+
 
 def parse_date(body, key):
     match = DATE_FIELDS[key].search(body or "")
@@ -134,13 +80,12 @@ def safe_title(value):
     return re.sub(r"[:;\r\n\x00-\x1f]", " ", value).strip()[:75] or "Untitled"
 
 
-def create_chart(issues, project_dates=None):
-    project_dates = project_dates or {}
+def create_chart(issues):
     scheduled, unscheduled = [], []
     for issue in issues:
-        fields = project_dates.get(issue["number"], {})
-        start = project_date(fields, ("start date", "start")) or parse_date(issue.get("body"), "start")
-        end = project_date(fields, ("target date", "due date", "end date")) or parse_date(issue.get("body"), "due")
+        fields = fetch_issue_field_dates(issue["number"])
+        start = field_date(fields, "start date")
+        end = field_date(fields, "target date")
         if not start or not end or end < start:
             unscheduled.append(issue)
             continue
@@ -151,7 +96,7 @@ def create_chart(issues, project_dates=None):
     lines = [
         "# GitHub Issues Gantt",
         "",
-        f"Source: [Issues](https://github.com/{REPO}/issues). Generated automatically; dates are *planned*, not inferred from creation/closure timestamps.",
+        f"Source: [Issues](https://github.com/{REPO}/issues). Generated automatically; dates are sourced from the issue sidebar Fields, not Projects.",
         "",
         "```mermaid",
         "gantt",
@@ -171,7 +116,7 @@ def create_chart(issues, project_dates=None):
     else:
         lines.extend([
             "    section Getting started",
-            "    Add Start date and Due date to an issue :setup, 2026-11-22, 1d",
+            "    Set Start date and Target date in issue Fields :setup, 2026-11-22, 1d",
         ])
     lines.extend(["```", "", "## Issues without valid scheduled dates", ""])
     if unscheduled:
@@ -194,4 +139,4 @@ def create_chart(issues, project_dates=None):
 
 
 if __name__ == "__main__":
-    create_chart(fetch_issues(), fetch_project_dates())
+    create_chart(fetch_issues())
