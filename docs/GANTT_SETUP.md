@@ -17,7 +17,13 @@ Issue state controls the completion marker; closed issues are shown as `done`. I
 
 `.github/workflows/gantt.yml` runs when an issue is opened, edited, closed, reopened, or deleted; once daily; or on manual dispatch. It regenerates `docs/GANTT.md` and commits changes to `main` once the PR is merged.
 
-The workflow uses the repository `GITHUB_TOKEN` and does not read GitHub Projects custom date fields. **Project #7 dates are not automatically synchronized.** To use those fields instead requires a separate Projects GraphQL integration and an access token with the relevant project permissions.
+## Project #7 date fields
+
+The generator now supports GitHub Project #7's **Start date** and **Target date** fields, with issue-description dates as fallback. Project dates take precedence when configured.
+
+To enable them, create a fine-grained or classic personal access token authorized to read your user-owned GitHub Project (for a classic PAT, use the `read:project` scope). Store it as the repository Actions secret `PROJECT_TOKEN` under **Settings → Secrets and variables → Actions**. Keep the token private. The default `GITHUB_TOKEN` alone generally cannot access user-owned Projects V2.
+
+Until `PROJECT_TOKEN` is configured, the workflow continues to use issue-body dates. On a permission failure, the workflow reports an error rather than silently making up dates. Project updates alone do not fire repository issue events, so the daily cron or **Run workflow** button is needed to refresh the chart immediately after editing project-only dates.
 
 ## Testing locally
 
