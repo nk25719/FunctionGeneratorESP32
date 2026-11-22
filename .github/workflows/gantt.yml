@@ -24,6 +24,8 @@ jobs:
         with:
           ref: main
           persist-credentials: true
+      - name: Verify Gantt rendering
+        run: python3 -m unittest discover -s tests -p 'test_gantt.py' -v
       - name: Generate Mermaid Gantt from issues
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
