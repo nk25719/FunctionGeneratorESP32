@@ -77,7 +77,7 @@ def parse_date(body, key):
 
 def safe_title(value):
     # Mermaid uses colons, semicolons and line breaks as syntax.
-    return re.sub(r"[:;\r\n\x00-\x1f]", " ", value).strip()[:75] or "Untitled"
+    return re.sub(r"[:;\r\n\x00-\x1f]", " ", value).strip()[:43] or "Untitled"
 
 
 def create_chart(issues):
@@ -103,6 +103,7 @@ def create_chart(issues):
         "    title FunctionGeneratorESP32 issue schedule",
         "    dateFormat YYYY-MM-DD",
         "    axisFormat %b %d",
+        "    tickInterval 1day",
     ]
     if scheduled:
         lines.append("    section Scheduled issues")
@@ -118,7 +119,18 @@ def create_chart(issues):
             "    section Getting started",
             "    Set Start date and Target date in issue Fields :setup, 2026-11-22, 1d",
         ])
-    lines.extend(["```", "", "## Issues without valid scheduled dates", ""])
+    lines.extend(["```", "", "## Scheduled issue dates", ""])
+    if scheduled:
+        lines.extend(["| Issue | Start | Target | State |", "| --- | --- | --- | --- |"])
+        for start, end, issue in scheduled:
+            title = issue["title"].replace("|", "&#124;").replace("\\n", " ")
+            lines.append(
+                f"| [#{issue['number']} — {title}](https://github.com/{REPO}/issues/{issue['number']}) "
+                f"| {start.isoformat()} | {end.isoformat()} | {issue['state']} |"
+            )
+    else:
+        lines.append("Set Start date and Target date in an issue's Fields section.")
+    lines.extend(["", "## Issues without valid scheduled dates", ""])
     if unscheduled:
         lines.append("| Issue | Status |")
         lines.append("| --- | --- |")
