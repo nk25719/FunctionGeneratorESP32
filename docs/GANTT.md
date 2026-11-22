@@ -1,17 +1,24 @@
 # GitHub Issues Gantt
 
-Initial preview uses Issue #19's native issue Fields dates confirmed in the GitHub issue sidebar on 2026-11-22. Future updates are generated automatically from issue field values.
+**Pre-merge preview.** Issue #19 dates were read from the issue screenshot, not fetched by an executed GitHub Actions job. After merging, the chart will be regenerated using the issue Fields API.
 
 ```mermaid
 gantt
     title FunctionGeneratorESP32 issue schedule
     dateFormat YYYY-MM-DD
     axisFormat %b %d
+    tickInterval 1day
     section Scheduled issues
-    #19 Oscilloscope Vertical Axis should be in Volts :issue19, 2026-11-22, 4d
+    #19 Oscilloscope vertical axis (Volts) :issue19, 2026-11-22, 4d
 ```
 
 **Issue #19:** Start date 2026-11-22; Target date 2026-11-25 (inclusive). These dates are from its issue-level Fields sidebar.
+
+## Scheduled issue dates
+
+| Issue | Start | Target | State |
+| --- | --- | --- | --- |
+| [#19 — Oscilloscope Vertical Axis should be in Volts](https://github.com/nk25719/FunctionGeneratorESP32/issues/19) | 2026-11-22 | 2026-11-25 | open |
 
 ## Unscheduled issues
 
