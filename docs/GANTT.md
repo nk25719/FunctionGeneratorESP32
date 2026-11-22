@@ -1,17 +1,17 @@
 # GitHub Issues Gantt
 
-Initial chart generated from repository issues on 2026-11-22. No issue descriptions currently contain both planned start and due dates.
+Initial preview uses Issue #19's native issue Fields dates confirmed in the GitHub issue sidebar on 2026-11-22. Future updates are generated automatically from issue field values.
 
 ```mermaid
 gantt
     title FunctionGeneratorESP32 issue schedule
     dateFormat YYYY-MM-DD
     axisFormat %b %d
-    section Getting started
-    Add Start date and Due date to an issue :setup, 2026-11-22, 1d
+    section Scheduled issues
+    #19 Oscilloscope Vertical Axis should be in Volts :issue19, 2026-11-22, 4d
 ```
 
-**Note:** The single bar above is a setup example, not a scheduled project issue. It will be replaced by real issue bars as dates are added.
+**Issue #19:** Start date 2026-11-22; Target date 2026-11-25 (inclusive). These dates are from its issue-level Fields sidebar.
 
 ## Unscheduled issues
 
@@ -30,7 +30,6 @@ gantt
 | [#14 — Add device-information splash screen](https://github.com/nk25719/FunctionGeneratorESP32/issues/14) | Not scheduled |
 | [#17 — Oscilliscope Display, Cannot Set for Longer Window](https://github.com/nk25719/FunctionGeneratorESP32/issues/17) | Not scheduled |
 | [#18 — Heart Beat on Buildin_LED Missing](https://github.com/nk25719/FunctionGeneratorESP32/issues/18) | Not scheduled |
-| [#19 — Oscilloscope Vertical Axis should be in Volts, Patch 0.0.9](https://github.com/nk25719/FunctionGeneratorESP32/issues/19) | Not scheduled |
 | [#20 — Implement, Best Practices for Pinout Management and more](https://github.com/nk25719/FunctionGeneratorESP32/issues/20) | Not scheduled |
 | [#23 — [FW]: Function Generator, Output Stopped Over Night,](https://github.com/nk25719/FunctionGeneratorESP32/issues/23) | Not scheduled |
 | [#24 — [FW]: Web Page, Function Generator, Frequencey Input Unstable](https://github.com/nk25719/FunctionGeneratorESP32/issues/24) | Not scheduled |
@@ -46,11 +45,6 @@ gantt
 
 ## Scheduling an issue
 
-Add these lines to its description:
-
-```text
-Start date: 2026-11-23
-Due date: 2026-12-05
-```
+Set **Start date** and **Target date** in the issue sidebar **Fields** section.
 
 After this feature is merged, GitHub Actions refreshes this document on issue changes and daily.
