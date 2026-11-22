@@ -27,6 +27,7 @@ jobs:
       - name: Generate Mermaid Gantt from issues
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python3 scripts/generate_gantt.py
       - name: Commit chart when changed
