@@ -8,7 +8,7 @@ static const char INDEX_HTML[] PROGMEM = R"WAVEGENHTML(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f4f7fb">
-  <title>ESP32 Wave Generator</title>
+  <title>Function Generator</title>
   <style>
     :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#162238;background:#f4f7fb;font-synthesis:none}
     *{box-sizing:border-box}body{margin:0;min-width:320px}.wrap{width:100%;max-width:none;margin:auto;padding:24px clamp(14px,2.2vw,36px) 48px}#generatorView{max-width:1050px;margin:0 auto}
@@ -38,7 +38,7 @@ static const char INDEX_HTML[] PROGMEM = R"WAVEGENHTML(
 </head>
 <body>
   <dialog class="splash" id="deviceSplash" aria-labelledby="splashTitle" aria-describedby="splashStatus">
-    <h2 id="splashTitle">ESP32 Wave Generator</h2>
+    <h2 id="splashTitle">Function Generator</h2>
     <p class="sub" id="splashStatus" role="status" aria-live="polite">Reading device information…</p>
     <dl>
       <dt>Program name</dt><dd id="splashProgram">Loading…</dd>
@@ -47,15 +47,15 @@ static const char INDEX_HTML[] PROGMEM = R"WAVEGENHTML(
       <dt>MAC address (Wi-Fi station)</dt><dd id="splashMac">Loading…</dd>
       <dt>Connected Wi-Fi</dt><dd id="splashWifi">Loading…</dd>
     </dl>
-    <form method="dialog"><button autofocus type="submit">Continue to generator</button></form>
+    <form method="dialog"><button autofocus type="submit">Continue to Function Generator</button></form>
   </dialog>
   <main class="wrap">
     <header>
-      <div><h1>ESP32 Wave Generator</h1><p class="sub">Two independently controlled DAC outputs, including a synthetic PPG pulse.</p></div>
+      <div><h1>Function Generator</h1><p class="sub">Two independently controlled DAC outputs, including a synthetic PPG pulse.</p></div>
       <div class="badge"><span class="dot" id="connectionDot"></span><span id="connectionText">Connecting…</span><span id="firmwareBuild"></span><button class="device-info-button" id="deviceInfo" type="button">Device info</button></div>
     </header>
     <nav class="viewtabs" aria-label="Device view">
-      <button id="generatorTab" class="active" type="button">Wave generator</button>
+      <button id="generatorTab" class="active" type="button">Function Generator</button>
       <button id="scopeTab" type="button">Oscilloscope inputs</button>
     </nav>
     <section id="generatorView">

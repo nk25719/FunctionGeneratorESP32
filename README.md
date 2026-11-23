@@ -1,15 +1,15 @@
 # FunctionGeneratorESP32
-This is an ESP32 based two output function generator and multi channel oscilloscope.  
+This is an ESP32 based two output Function Generator and multi channel oscilloscope.
 The ESP32 serves a web page for User Interface.
 
 ## Screen shots
 | Function Generator Web Page | Oscilloscope Web Page |
 | :---: | :---: |
-| <img width="500" alt="image" src="https://github.com/user-attachments/assets/19772723-1161-4a72-9972-38874b6fec13" /> | <img width="500" alt="image" src="https://github.com/user-attachments/assets/53694ea1-68ff-4ba8-ba32-0b636ee8b0d0" /><br><br>*Note the function generator outputs are looped into the first two inputs.* |
+| <img width="500" alt="image" src="https://github.com/user-attachments/assets/19772723-1161-4a72-9972-38874b6fec13" /> | <img width="500" alt="image" src="https://github.com/user-attachments/assets/53694ea1-68ff-4ba8-ba32-0b636ee8b0d0" /><br><br>*Note the Function Generator outputs are looped into the first two inputs.* |
 
 
 ## Fun with Functions.
-Using some resistors, the function generator, and the oscilloscope we can have some fun with functions.
+Using some resistors, the Function Generator, and the oscilloscope we can have some fun with functions.
 
 Lets add two functions through equal resistors (10K) and set the frequencies almost the same.  
 
