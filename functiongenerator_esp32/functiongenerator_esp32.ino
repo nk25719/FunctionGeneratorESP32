@@ -1,11 +1,6 @@
 // 26/08/2026.    dd/mm/yy
 #define PROGRAMME_NAME "functiongenerator_esp32"
-<<<<<<< HEAD
 #define VERSION " V 0.0.9 "  // ESP32-S2 DAC pin correction; web-controlled sketch added
-=======
-// #define VERSION " V 0.0.6 "  // Firmware, Version 0.0.5 BPM has changed from about 72 to about 365 #15
-#define VERSION " V 0.0.7 "  // Runtime DAC amplitude control, issue #5
->>>>>>> 7f098ec (updated with serial amplitude control and BOOT input configuration, AmplitudeControl.hthe function that scales the DAC amplitude.)
 #define MODEL_NAME "Model: functiongenerator_esp32"
 #define DEVICE_UNDER_TEST "ESP32-S2 WROOM DevKit 1"
 #define LICENSE "GNU Affero General Public License, version 3 "
@@ -225,16 +220,9 @@ void setup()
 
   // splashserial();
 
-<<<<<<< HEAD
   pinMode(GPIO0, INPUT_PULLUP); // BOOT button pauses the waveform when held
   dacWrite(DAC1_PIN, 128); // DAC1 midpoint
-  dacWrite(DAC2_PIN, 64);  // DAC2 quarter-scale   
-=======
-  pinMode(GPIO0, INPUT_PULLUP);
-
-  dacWrite(DAC_PIN, 10);  // GPIO25 baseline.
-  dacWrite(26, 5);       // GPIO26 remains half-scale.
->>>>>>> 7f098ec (updated with serial amplitude control and BOOT input configuration, AmplitudeControl.hthe function that scales the DAC amplitude.)
+  dacWrite(DAC2_PIN, 64);  // DAC2 quarter-scale
 
   // --------------------------------------------------------
   // GPIO 2 PWM
@@ -350,20 +338,12 @@ void loop()
       );
       }
 
-<<<<<<< HEAD
-  if (true == digitalRead(GPIO0))
-   {
-       dacWrite(DAC1_PIN, ledBrightness); // DAC1
-       dacWrite(DAC2_PIN, ledBrightness / 2); // DAC2 at half amplitude
-=======
     if (true == digitalRead(GPIO0))
     {
       const uint8_t dacValue =
           scaleDacAmplitude(ledBrightness, amplitudeLevel);
->>>>>>> 7f098ec (updated with serial amplitude control and BOOT input configuration, AmplitudeControl.hthe function that scales the DAC amplitude.)
-
-      dacWrite(DAC_PIN, dacValue);
-      dacWrite(26, dacValue / 2);
+      dacWrite(DAC1_PIN, dacValue);
+      dacWrite(DAC2_PIN, dacValue / 2);
     }
 
     // ------------------------------------------------------

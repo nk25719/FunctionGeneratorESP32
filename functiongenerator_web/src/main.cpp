@@ -16,7 +16,7 @@
 // Pin selection follows the PlatformIO target: classic ESP32 uses GPIO25/26;
 // ESP32-S2 uses GPIO17/18 for its built-in DAC channels.
 static constexpr const char *FIRMWARE_BUILD_ID = "0.0.9";
-static constexpr const char *PROGRAM_NAME = "FunctionGeneratorESP32";
+static constexpr const char *PROGRAM_NAME = "Function Generator";
 static constexpr const char *COMPILED_AT = __DATE__ " " __TIME__;
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 static constexpr const char *BOARD_TARGET_NAME = "ESP32-S2";
@@ -775,7 +775,7 @@ void setup() {
   delay(250);
   Serial.println();
   Serial.print(BOARD_TARGET_NAME);
-  Serial.println(" dual-channel waveform generator");
+  Serial.println(" Function Generator (dual-channel)");
   Serial.print("DAC1 GPIO");
   Serial.print(DAC_PINS[0]);
   Serial.print(" / DAC2 GPIO");

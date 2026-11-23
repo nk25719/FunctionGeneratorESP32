@@ -1,6 +1,6 @@
 # ESP32 Function Generator and Scope
 
-Browser-controlled waveform generator and input scope for the **classic ESP32 DevKit** (`esp32dev`). Includes two independent DAC outputs, six analog inputs, and 17 selectable PWM capture inputs. Both outputs start disabled after every reboot.
+Browser-controlled Function Generator and input scope for the **classic ESP32 DevKit** (`esp32dev`). Includes two independent DAC outputs, six analog inputs, and 17 selectable PWM capture inputs. Both outputs start disabled after every reboot.
 
 The onboard LED on **GPIO2** pulses continuously at **72 BPM**, including during Wi-Fi setup and when both DAC outputs are disabled. Its brightness follows a PPG-style pulse independently of channel settings and timed faults. This indicator requires a board with an active-high LED connected to GPIO2.
 
@@ -36,7 +36,7 @@ The webpage and API require **no username or password**. Anyone on the connected
 
 ## Use the Controls
 
-### Wave Generator
+### Function Generator
 
 Each DAC channel has independent waveform, frequency, amplitude, offset, and output-enable controls. Choose sine, square, triangle, sawtooth, PPG, or DC. The waveform frequency range is **0.5 Hz-20 kHz**, in 0.1 Hz steps. Use the slider or type a precise frequency into the numeric field below it.
 
@@ -116,7 +116,7 @@ Main files: `src/main.cpp` contains the firmware, `include/wavegen_page.h` conta
 
 Opening the web interface displays a dismissible splash with the program name,
 full patch version, firmware compile date/time, Wi-Fi station MAC address, and
-connected Wi-Fi SSID. Choose **Continue to generator** or press Escape to dismiss
+connected Wi-Fi SSID. Choose **Continue to Function Generator** or press Escape to dismiss
 it; **Device info** in the header opens it again. Viewing or dismissing the splash
 does not enable outputs or change generator settings.
 

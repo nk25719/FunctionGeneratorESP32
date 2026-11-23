@@ -91,14 +91,14 @@ test('rapid PWM changes are serialized and failed disable restores selection',as
 test('splash opens at startup and renders device metadata as text',()=>{
   const p=page();
   assert.equal(p.element('deviceSplash').open,true);
-  const state={programName:'FunctionGeneratorESP32',firmware:'0.0.7',compiledAt:'Nov 12 2026 18:00:00',macAddress:'AA:BB:CC:DD:EE:FF',wifiConnected:true,wifiSsid:'Lab "A" \\ <img src=x onerror=alert(1)>'};
+  const state={programName:'Function Generator',firmware:'0.0.7',compiledAt:'Nov 12 2026 18:00:00',macAddress:'AA:BB:CC:DD:EE:FF',wifiConnected:true,wifiSsid:'Lab "A" \\ <img src=x onerror=alert(1)>'};
   p.run(`updateDeviceInfo(${JSON.stringify(state)})`);
   for(const [id,key] of [['splashProgram','programName'],['splashVersion','firmware'],['splashCompiled','compiledAt'],['splashMac','macAddress'],['splashWifi','wifiSsid']])assert.equal(p.element(id).textContent,state[key]);
   assert.equal(p.element('splashWifi').innerHTML,undefined);
 });
 
 test('successful state polling populates every splash field',async()=>{
-  const state={programName:'FunctionGeneratorESP32',firmware:'0.0.8',compiledAt:'Nov 13 2026 20:00:00',macAddress:'AA:BB:CC:DD:EE:FF',wifiConnected:true,wifiSsid:'Lab network',channels:[],timerTicks:1};
+  const state={programName:'Function Generator',firmware:'0.0.8',compiledAt:'Nov 13 2026 20:00:00',macAddress:'AA:BB:CC:DD:EE:FF',wifiConnected:true,wifiSsid:'Lab network',channels:[],timerTicks:1};
   const p=page(async()=>({ok:true,json:async()=>state}));
   await p.run('loadState()');
   for(const [id,key] of [['splashProgram','programName'],['splashVersion','firmware'],['splashCompiled','compiledAt'],['splashMac','macAddress'],['splashWifi','wifiSsid']])assert.equal(p.element(id).textContent,state[key]);
