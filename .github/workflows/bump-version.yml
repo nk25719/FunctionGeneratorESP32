@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 # A rerun of the same PR must not race itself. Different PRs use optimistic
 # push/retry below, so GitHub concurrency cannot discard queued merge events.
@@ -25,7 +26,19 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - name: Check whether the merged PR changed firmware
+        id: firmware
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          changed=$(gh api --paginate --slurp \
+            "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100" |
+            python3 scripts/firmware_changes.py)
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
       - name: Increment patch version and push
+        if: steps.firmware.outputs.changed == 'true'
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         shell: bash
@@ -41,6 +54,9 @@ jobs:
             if git diff --cached --quiet; then
               exit 0
             fi
+            # Bot pushes using GITHUB_TOKEN do not trigger the push checks.
+            python3 -m unittest discover -s tests -v
+            node functiongenerator_web/tests/web_regression.cjs
             git commit -m "chore: bump version after PR #${PR_NUMBER}"
             if git push origin HEAD:main; then
               exit 0
