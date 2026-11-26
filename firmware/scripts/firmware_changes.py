@@ -29,6 +29,19 @@ def is_firmware_path(path):
 def has_firmware_changes(pages):
     files = [file for page in pages for file in page]
     for file in files:
+        # Ignore unchanged relocations into firmware/.
+        previous = file.get("previous_filename", "")
+        current = file["filename"]
+
+        if (
+            file.get("status") == "renamed"
+            and previous
+            and current == "firmware/" + previous
+            and file.get("additions") == 0
+            and file.get("deletions") == 0
+        ):
+            continue
+
         if is_firmware_path(file["filename"]) or is_firmware_path(
             file.get("previous_filename", "")
         ):
