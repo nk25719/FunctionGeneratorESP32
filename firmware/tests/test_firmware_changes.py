@@ -47,3 +47,31 @@ class FirmwareChangeTests(unittest.TestCase):
         files = [{"filename": f"docs/page-{i}.md"} for i in range(3000)]
         with self.assertRaisesRegex(ValueError, "capped file list"):
             has_firmware_changes([files])
+
+
+class RelocationTests(unittest.TestCase):
+    def test_pure_relocation_does_not_bump(self):
+        self.assertFalse(has_firmware_changes([[
+            {
+                "filename":
+                    "firmware/functiongenerator_web/src/main.cpp",
+                "previous_filename":
+                    "functiongenerator_web/src/main.cpp",
+                "status": "renamed",
+                "additions": 0,
+                "deletions": 0,
+            }
+        ]]))
+
+    def test_relocation_with_edits_does_bump(self):
+        self.assertTrue(has_firmware_changes([[
+            {
+                "filename":
+                    "firmware/functiongenerator_web/src/main.cpp",
+                "previous_filename":
+                    "functiongenerator_web/src/main.cpp",
+                "status": "renamed",
+                "additions": 2,
+                "deletions": 1,
+            }
+        ]]))
