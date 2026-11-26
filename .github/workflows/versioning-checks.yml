@@ -16,4 +16,4 @@ jobs:
       - name: Test version increments and rerun behavior
         run: python3 -m unittest discover -s firmware/tests -v
       - name: Test web controls
-        run: node firmware/functiongenerator_web/tests/web_regression.cjs
+        run: node --test firmware/functiongenerator_web/tests/*.cjs
