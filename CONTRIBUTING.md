@@ -1,4 +1,4 @@
-# Krake 
+# FunctionGeneratorESP32 
 
 Version: 0.0.1  
 Last edited 20261126
@@ -40,7 +40,7 @@ git config --global user.email "you@example.com"
 
 ```bash
 git clone https://github.com/PubInv/FunctionGeneratorESP32.git
-cd krake
+cd FunctionGeneratorESP32
 git remote -v
 ```
 
