@@ -1,0 +1,51 @@
+name: Version impact validation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate version label
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          with open(os.environ["GITHUB_EVENT_PATH"]) as f:
+              event = json.load(f)
+
+          valid = {
+              "version:major",
+              "version:minor",
+              "version:patch",
+              "version:none",
+          }
+
+          labels = {
+              label["name"]
+              for label in event["pull_request"]["labels"]
+          }
+
+          selected = labels & valid
+
+          if len(selected) != 1:
+              raise SystemExit(
+                  "Select exactly one version impact label."
+              )
+
+          print("Version impact:", selected.pop())
+          PY

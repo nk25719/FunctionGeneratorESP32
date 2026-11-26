@@ -81,3 +81,26 @@ class VersioningTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SemanticVersionTests(VersioningTests):
+
+    def test_minor_increment(self):
+        current = (self.root / "VERSION").read_text().strip()
+        major, minor, patch = map(int, current.split("."))
+        expected = f"{major}.{minor + 1}.0"
+
+        self.assertEqual(
+            VERSIONING.bump(self.root, 1, "minor"),
+            expected
+        )
+
+    def test_major_increment(self):
+        current = (self.root / "VERSION").read_text().strip()
+        major, minor, patch = map(int, current.split("."))
+        expected = f"{major + 1}.0.0"
+
+        self.assertEqual(
+            VERSIONING.bump(self.root, 1, "major"),
+            expected
+        )
