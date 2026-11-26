@@ -9,6 +9,10 @@ SKETCH_EXTENSIONS = {".ino", ".h", ".hpp", ".c", ".cc", ".cpp", ".cxx", ".S", ".
 
 
 def is_firmware_path(path):
+    # Normalize paths following repository restructuring.
+    if path.startswith("firmware/"):
+        path = path[len("firmware/"):]
+
     if path == "functiongenerator_web/platformio.ini" or path.startswith(
         ("functiongenerator_web/src/", "functiongenerator_web/include/")
     ):

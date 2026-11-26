@@ -6,7 +6,7 @@ import re
 import subprocess
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def commit_subject(pr):
@@ -32,9 +32,9 @@ def bump(root, pr):
     major, minor, patch = map(int, current.split("."))
     version = f"{major}.{minor}.{patch + 1}"
     replacements = [
-        ("functiongenerator_esp32/functiongenerator_esp32.ino",
+        ("firmware/functiongenerator_esp32/functiongenerator_esp32.ino",
          r'(?m)^(#define VERSION )"[^"\n]*"', f'\\g<1>" V {version} "'),
-        ("functiongenerator_web/src/main.cpp",
+        ("firmware/functiongenerator_web/src/main.cpp",
          r'(?m)^(static constexpr const char \*FIRMWARE_BUILD_ID = )"[^"\n]*";',
          f'\\g<1>"{version}";'),
     ]

@@ -8,12 +8,12 @@ import tempfile
 import unittest
 
 
-ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("bump_version", ROOT / "scripts/bump_version.py")
+ROOT = Path(__file__).resolve().parents[2]
+SPEC = importlib.util.spec_from_file_location("bump_version", ROOT / "firmware/scripts/bump_version.py")
 VERSIONING = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERSIONING)
-FILES = ["VERSION", "functiongenerator_esp32/functiongenerator_esp32.ino",
-         "functiongenerator_web/src/main.cpp"]
+FILES = ["VERSION", "firmware/functiongenerator_esp32/functiongenerator_esp32.ino",
+         "firmware/functiongenerator_web/src/main.cpp"]
 
 
 class VersioningTests(unittest.TestCase):

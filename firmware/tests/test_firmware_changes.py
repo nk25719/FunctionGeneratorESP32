@@ -2,18 +2,18 @@
 
 import unittest
 
-from scripts.firmware_changes import has_firmware_changes
+from firmware.scripts.firmware_changes import has_firmware_changes
 
 
 class FirmwareChangeTests(unittest.TestCase):
     def test_firmware_build_inputs_count(self):
         for path in (
-            "functiongenerator_web/src/main.cpp",
-            "functiongenerator_web/include/wavegen_page.h",
-            "functiongenerator_web/platformio.ini",
-            "functiongenerator_esp32/functiongenerator_esp32.ino",
-            "functiongenerator_esp32/AmplitudeControl.h",
-            "functiongenerator_esp32/src/driver.cpp",
+            "firmware/functiongenerator_web/src/main.cpp",
+            "firmware/functiongenerator_web/include/wavegen_page.h",
+            "firmware/functiongenerator_web/platformio.ini",
+            "firmware/functiongenerator_esp32/functiongenerator_esp32.ino",
+            "firmware/functiongenerator_esp32/AmplitudeControl.h",
+            "firmware/functiongenerator_esp32/src/driver.cpp",
         ):
             with self.subTest(path=path):
                 self.assertTrue(has_firmware_changes([[{"filename": path}]]))
@@ -22,14 +22,14 @@ class FirmwareChangeTests(unittest.TestCase):
         paths = (
             "README.md",
             "documentation/Manuals/guide.docx",
-            "functiongenerator_web/docs/bench_verification.md",
-            "functiongenerator_web/tests/web_regression.cjs",
-            "functiongenerator_esp32/README.md",
-            "functiongenerator_esp32/examples/demo.ino",
-            "ADCtomid_ESP32/ADCtomid_ESP32.ino",
+            "firmware/functiongenerator_web/docs/bench_verification.md",
+            "firmware/functiongenerator_web/tests/web_regression.cjs",
+            "firmware/functiongenerator_esp32/README.md",
+            "firmware/functiongenerator_esp32/examples/demo.ino",
+            "firmware/ADCtomid_ESP32/ADCtomid_ESP32.ino",
             "hardware/functiongenerator.kicad_sch",
             ".github/workflows/bump-version.yml",
-            "scripts/bump_version.py",
+            "firmware/scripts/bump_version.py",
             "VERSION",
         )
         self.assertFalse(has_firmware_changes([[{"filename": path} for path in paths]]))
@@ -39,7 +39,7 @@ class FirmwareChangeTests(unittest.TestCase):
             [{"filename": "README.md"}],
             [{
                 "filename": "archive/old-driver.cpp",
-                "previous_filename": "functiongenerator_web/src/old-driver.cpp",
+                "previous_filename": "firmware/functiongenerator_web/src/old-driver.cpp",
             }],
         ]))
 
