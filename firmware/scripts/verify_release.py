@@ -1,6 +1,7 @@
 """Verify an approved release candidate before publication."""
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import re
@@ -44,6 +45,11 @@ def verify(archive, approval_path, expected_version,
     )
 
     require(
+        approval.get("schema_version") == 1,
+        "Unsupported approval schema"
+    )
+
+    require(
         approval["decision"] == "approved",
         "Release is not approved"
     )
@@ -82,6 +88,24 @@ def verify(archive, approval_path, expected_version,
     require(
         approval["firmware_version"] == expected_version,
         "Approval version mismatch"
+    )
+
+    try:
+        approved_at = datetime.fromisoformat(
+            approval["approved_at_utc"].replace("Z", "+00:00")
+        )
+    except ValueError as exc:
+        raise ValueError("Invalid approval timestamp") from exc
+
+    require(
+        approved_at.tzinfo is not None
+        and approved_at.utcoffset() == timezone.utc.utcoffset(None),
+        "Approval timestamp must use UTC"
+    )
+
+    require(
+        approved_at <= datetime.now(timezone.utc),
+        "Approval timestamp is in the future"
     )
 
     archive_hash = sha256(archive.read_bytes())
@@ -131,10 +155,20 @@ def verify(archive, approval_path, expected_version,
         root = roots.pop()
 
         def read(name):
-            return bundle.read(f"{root}/{name}")
+            try:
+                return bundle.read(f"{root}/{name}")
+            except KeyError as exc:
+                raise ValueError(
+                    f"Missing archive file: {name}"
+                ) from exc
 
         manifest = json.loads(
             read("manifest.json")
+        )
+
+        require(
+            manifest.get("schema_version") == 1,
+            "Unsupported manifest schema"
         )
 
         require(

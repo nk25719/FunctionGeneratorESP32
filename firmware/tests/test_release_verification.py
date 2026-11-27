@@ -276,8 +276,7 @@ class ReleaseVerificationTests(unittest.TestCase):
 
         self.create_archive(mutate=mutate)
 
-        with self.assertRaises(KeyError):
-            self.verify()
+        self.assert_rejected("Missing archive file")
 
     def test_unsafe_archive_path(self):
         self.create_archive(
@@ -327,6 +326,33 @@ class ReleaseVerificationTests(unittest.TestCase):
 
         self.create_archive(mutate=mutate)
         self.assert_rejected("Checksum mismatch")
+
+
+
+    def test_unsupported_approval_schema(self):
+        self.approval["schema_version"] = 99
+        self.create_archive()
+        self.assert_rejected("Unsupported approval schema")
+
+    def test_unsupported_manifest_schema(self):
+        self.manifest["schema_version"] = 99
+        self.create_archive()
+        self.assert_rejected("Unsupported manifest schema")
+
+    def test_invalid_approval_timestamp(self):
+        self.approval["approved_at_utc"] = "invalid"
+        self.create_archive()
+        self.assert_rejected("Invalid approval timestamp")
+
+    def test_timestamp_without_timezone(self):
+        self.approval["approved_at_utc"] = "2026-01-01T00:00:00"
+        self.create_archive()
+        self.assert_rejected("Approval timestamp must use UTC")
+
+    def test_future_approval_timestamp(self):
+        self.approval["approved_at_utc"] = "2099-01-01T00:00:00Z"
+        self.create_archive()
+        self.assert_rejected("Approval timestamp is in the future")
 
 
 if __name__ == "__main__":
