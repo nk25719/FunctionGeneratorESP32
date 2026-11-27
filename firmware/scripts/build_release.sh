@@ -34,6 +34,12 @@ echo "=== PlatformIO ESP32 web firmware ===" \
 pio run \
   --project-dir firmware/functiongenerator_web \
   --environment esp32dev \
+  --target clean \
+  2>&1 | tee -a "$REPORT"
+
+pio run \
+  --project-dir firmware/functiongenerator_web \
+  --environment esp32dev \
   2>&1 | tee -a "$REPORT"
 
 WEB_BUILD="firmware/functiongenerator_web/.pio/build/esp32dev"
