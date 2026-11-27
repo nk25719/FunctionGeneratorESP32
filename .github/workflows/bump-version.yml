@@ -1,4 +1,4 @@
-name: Bump version after merge
+name: Update version and changelog after merge
 
 on:
   pull_request_target:
@@ -35,12 +35,29 @@ jobs:
         run: |
           changed=$(gh api --paginate --slurp \
             "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100" |
-            python3 scripts/firmware_changes.py)
+            python3 firmware/scripts/firmware_changes.py)
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
-      - name: Increment patch version and push
-        if: steps.firmware.outputs.changed == 'true'
+      - name: Determine version impact
+        id: impact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          impact=$(gh api \
+            "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+            --jq '.labels' | \
+            python3 firmware/scripts/version_impact.py)
+          echo "impact=$impact" >> "$GITHUB_OUTPUT"
+
+      - name: Update version and changelog
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          BUMP_TYPE: ${{ steps.impact.outputs.impact }}
+          FIRMWARE_CHANGED: ${{ steps.firmware.outputs.changed }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         shell: bash
         run: |
           set -euo pipefail
@@ -49,14 +66,25 @@ jobs:
           for attempt in {1..10}; do
             git fetch origin main
             git reset --hard origin/main
-            python3 scripts/bump_version.py --pr "$PR_NUMBER"
-            git add VERSION functiongenerator_esp32/functiongenerator_esp32.ino functiongenerator_web/src/main.cpp
+            if [ "$FIRMWARE_CHANGED" = "true" ] && [ "$BUMP_TYPE" != "none" ]; then
+              python3 firmware/scripts/bump_version.py --pr "$PR_NUMBER" --bump "$BUMP_TYPE"
+            fi
+
+            python3 firmware/scripts/update_changelog.py \
+              --pr "$PR_NUMBER" \
+              --title "$PR_TITLE" \
+              --impact "$BUMP_TYPE" \
+              --author "$PR_AUTHOR" \
+              --repository "$GITHUB_REPOSITORY"
+
+            git add CHANGELOG.md
+            git add VERSION firmware/functiongenerator_esp32/functiongenerator_esp32.ino firmware/functiongenerator_web/src/main.cpp
             if git diff --cached --quiet; then
               exit 0
             fi
             # Bot pushes using GITHUB_TOKEN do not trigger the push checks.
-            python3 -m unittest discover -s tests -v
-            node functiongenerator_web/tests/web_regression.cjs
+            python3 -m unittest discover -s firmware/tests -v
+            node --test firmware/functiongenerator_web/tests/*.cjs
             git commit -m "chore: bump version after PR #${PR_NUMBER}"
             if git push origin HEAD:main; then
               exit 0

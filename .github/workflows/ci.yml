@@ -1,0 +1,170 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  regression-tests:
+    name: Regression tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install C++ compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++
+
+      - name: Python regression tests
+        run: |
+          python3 -m unittest discover \
+            -s firmware/tests -v
+
+      - name: Firmware and web regression tests
+        run: |
+          node --test \
+            firmware/functiongenerator_web/tests/*.cjs
+
+  platformio-build:
+    name: PlatformIO firmware build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PlatformIO
+        run: python3 -m pip install platformio==6.1.18
+
+      - name: Compile web firmware
+        run: |
+          pio run \
+            --project-dir firmware/functiongenerator_web \
+            --environment esp32dev
+
+      - name: Store firmware build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: platformio-esp32dev-${{ github.sha }}
+          path: |
+            firmware/functiongenerator_web/.pio/build/esp32dev/*.bin
+            firmware/functiongenerator_web/.pio/build/esp32dev/*.elf
+            firmware/functiongenerator_web/.pio/build/esp32dev/*.map
+          if-no-files-found: error
+          retention-days: 14
+
+  arduino-build:
+    name: Arduino build (${{ matrix.board }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - esp32:esp32:esp32
+          - esp32:esp32:esp32s2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: arduino/setup-arduino-cli@v2
+        with:
+          version: '1.6.0'
+
+      - name: Configure ESP32 board support
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.3
+
+      - name: Compile standalone firmware
+        run: |
+          arduino-cli compile \
+            --fqbn "${{ matrix.board }}" \
+            --output-dir build/standalone \
+            firmware/functiongenerator_esp32
+
+      - name: Compile ADC example
+        run: |
+          arduino-cli compile \
+            --fqbn "${{ matrix.board }}" \
+            --output-dir build/adc-example \
+            firmware/ADCtomid_ESP32
+
+      - name: Store Arduino build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arduino-${{ strategy.job-index }}-${{ github.sha }}
+          path: build/
+          if-no-files-found: error
+          retention-days: 14
+
+  workflow-validation:
+    name: Workflow syntax validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker://rhysd/actionlint:1.7.7
+
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    if: always()
+
+    needs:
+      - regression-tests
+      - platformio-build
+      - arduino-build
+      - workflow-validation
+
+    steps:
+      - name: Verify all required checks
+        env:
+          REGRESSION: ${{ needs.regression-tests.result }}
+          PLATFORMIO: ${{ needs.platformio-build.result }}
+          ARDUINO: ${{ needs.arduino-build.result }}
+          WORKFLOWS: ${{ needs.workflow-validation.result }}
+        run: |
+          set -euo pipefail
+
+          for result in \
+            "$REGRESSION" \
+            "$PLATFORMIO" \
+            "$ARDUINO" \
+            "$WORKFLOWS"
+          do
+            if [ "$result" != "success" ]; then
+              echo "Required CI check failed: $result"
+              exit 1
+            fi
+          done
+
+          echo "All required CI checks passed."

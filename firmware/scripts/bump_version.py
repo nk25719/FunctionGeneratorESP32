@@ -1,4 +1,4 @@
-"""Bump the patch version once per merged PR and sync firmware identifiers."""
+"""Bump the semantic version once per merged PR and sync firmware identifiers."""
 
 import argparse
 from pathlib import Path
@@ -6,14 +6,14 @@ import re
 import subprocess
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def commit_subject(pr):
     return f"chore: bump version after PR #{pr}"
 
 
-def bump(root, pr):
+def bump(root, pr, bump_type="patch"):
     if pr < 1:
         raise ValueError("PR number must be positive")
     subject = commit_subject(pr)
@@ -30,11 +30,18 @@ def bump(root, pr):
     if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", current):
         raise ValueError(f"Invalid VERSION: {current!r}")
     major, minor, patch = map(int, current.split("."))
-    version = f"{major}.{minor}.{patch + 1}"
+    if bump_type == "major":
+        version = f"{major + 1}.0.0"
+    elif bump_type == "minor":
+        version = f"{major}.{minor + 1}.0"
+    elif bump_type == "patch":
+        version = f"{major}.{minor}.{patch + 1}"
+    else:
+        raise ValueError(f"Invalid bump type: {bump_type}")
     replacements = [
-        ("functiongenerator_esp32/functiongenerator_esp32.ino",
+        ("firmware/functiongenerator_esp32/functiongenerator_esp32.ino",
          r'(?m)^(#define VERSION )"[^"\n]*"', f'\\g<1>" V {version} "'),
-        ("functiongenerator_web/src/main.cpp",
+        ("firmware/functiongenerator_web/src/main.cpp",
          r'(?m)^(static constexpr const char \*FIRMWARE_BUILD_ID = )"[^"\n]*";',
          f'\\g<1>"{version}";'),
     ]
@@ -55,5 +62,10 @@ def bump(root, pr):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pr", type=int, required=True)
+    parser.add_argument(
+        "--bump",
+        choices=["major", "minor", "patch"],
+        default="patch"
+    )
     args = parser.parse_args()
-    bump(ROOT, args.pr)
+    bump(ROOT, args.pr, args.bump)
