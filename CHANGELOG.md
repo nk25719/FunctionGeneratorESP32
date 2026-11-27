@@ -11,6 +11,7 @@ and the Keep a Changelog convention.
 ### Added
 
 ### Changed
+- Refactor repository structure and automate firmware lifecycle ([#44](https://github.com/nk25719/FunctionGeneratorESP32/pull/44)) — @nk25719 — NONE <!-- pr:44 -->
 
 ### Deprecated
 
