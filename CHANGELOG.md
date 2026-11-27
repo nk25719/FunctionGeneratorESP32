@@ -11,6 +11,7 @@ and the Keep a Changelog convention.
 ### Added
 
 ### Changed
+- ci: upgrade GitHub Actions to Node 24 compatible majors ([#46](https://github.com/nk25719/FunctionGeneratorESP32/pull/46)) — @nk25719 — NONE <!-- pr:46 -->
 - test(release): validate release candidate promotion ([#45](https://github.com/nk25719/FunctionGeneratorESP32/pull/45)) — @nk25719 — NONE <!-- pr:45 -->
 - Refactor repository structure and automate firmware lifecycle ([#44](https://github.com/nk25719/FunctionGeneratorESP32/pull/44)) — @nk25719 — NONE <!-- pr:44 -->
 
