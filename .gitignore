@@ -1,0 +1,6 @@
+.DS_Store
+.pio/
+build/
+__pycache__/
+*.pyc
+.venv/

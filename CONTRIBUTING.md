@@ -216,3 +216,44 @@ git fetch --prune
 
 * Block force pushes
 > Prevent users with push access from force pushing to refs.
+
+## Continuous Integration
+
+Every pull request targeting main must pass the
+applicable automated quality checks.
+
+### Automated checks
+
+- Python versioning and changelog regression tests.
+- Web interface regression tests.
+- Audio and DMA regression tests.
+- Heartbeat regression tests.
+- PlatformIO firmware compilation.
+- Arduino firmware compilation.
+- ADC example compilation.
+- GitHub Actions workflow validation.
+
+### Local verification
+
+Run from the repository root:
+
+    python3 -m unittest discover -s firmware/tests -v
+    node --test firmware/functiongenerator_web/tests/*.cjs
+    pio run --project-dir firmware/functiongenerator_web -e esp32dev
+    actionlint
+
+### Hardware verification
+
+Successful automated compilation does not establish
+electrical performance or hardware safety.
+
+Changes affecting physical outputs must include
+appropriate bench validation and measurement evidence.
+
+### Merge requirements
+
+The CI Gate must pass before maintainer approval
+and merging into main.
+
+Generated CI artifacts are development builds,
+not official product releases.
