@@ -1,0 +1,238 @@
+name: Official Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Firmware version, e.g. 0.0.10'
+        required: true
+        type: string
+
+      candidate_run_id:
+        description: 'Release Candidate workflow run ID'
+        required: true
+        type: string
+
+      candidate_attempt:
+        description: 'Candidate workflow attempt'
+        required: true
+        default: '1'
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: official-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify and prepare official release
+    runs-on: ubuntu-latest
+
+    environment: production-release
+
+    permissions:
+      contents: write
+      actions: read
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ inputs.version }}
+      RUN_ID: ${{ inputs.candidate_run_id }}
+      ATTEMPT: ${{ inputs.candidate_attempt }}
+
+    steps:
+      - name: Require main branch
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate inputs
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+
+          assert re.fullmatch(
+              r"(0|[1-9]\d*)\."
+              r"(0|[1-9]\d*)\."
+              r"(0|[1-9]\d*)",
+              os.environ["VERSION"]
+          )
+
+          for name in ("RUN_ID", "ATTEMPT"):
+              assert re.fullmatch(
+                  r"[1-9]\d*",
+                  os.environ[name]
+              )
+          PY
+
+      - name: Verify candidate workflow
+        run: |
+          gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            > candidate-run.json
+
+          python3 - <<'PY'
+          import json
+          import os
+
+          run = json.load(open("candidate-run.json"))
+
+          assert run["path"] == \
+              ".github/workflows/release-candidate.yml"
+
+          assert run["conclusion"] == "success"
+          assert run["head_branch"] == "main"
+
+          assert run["head_repository"]["full_name"] == \
+              os.environ["GITHUB_REPOSITORY"]
+
+          assert run["run_attempt"] == \
+              int(os.environ["ATTEMPT"])
+          PY
+
+      - name: Download approved candidate
+        run: |
+          NUMBER="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            --jq '.run_number')"
+
+          mkdir -p candidate
+
+          gh run download "$RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "release-candidate-$NUMBER-$ATTEMPT" \
+            --dir candidate
+
+      - name: Verify approved archive
+        id: verification
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          archives=(candidate/*.zip)
+          test "${#archives[@]}" -eq 1
+
+          APPROVAL="documentation/Releases/v$VERSION/APPROVAL.json"
+
+          test -f "$APPROVAL"
+
+          python3 firmware/scripts/verify_release.py \
+            --archive "${archives[0]}" \
+            --approval "$APPROVAL" \
+            --version "$VERSION" \
+            --run-id "$RUN_ID" \
+            --attempt "$ATTEMPT" \
+            > verified-release.json
+
+          COMMIT="$(python3 -c \
+            'import json; print(json.load(open("verified-release.json"))["source_commit"])')"
+
+          EXPECTED="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            --jq '.head_sha')"
+
+          test "$COMMIT" = "$EXPECTED"
+
+          git merge-base --is-ancestor \
+            "$COMMIT" origin/main
+
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "archive=${archives[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Create annotated release tag
+        env:
+          SOURCE_COMMIT: ${{ steps.verification.outputs.commit }}
+        run: |
+          set -euo pipefail
+
+          TAG="v$VERSION"
+
+          git fetch --tags origin
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag already exists. Review manually."
+            exit 1
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release already exists."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$TAG" "$SOURCE_COMMIT" \
+            -m "Approved FunctionGeneratorESP32 $TAG"
+
+          git push origin "refs/tags/$TAG"
+
+      - name: Prepare release notes
+        env:
+          SOURCE_COMMIT: ${{ steps.verification.outputs.commit }}
+          ARCHIVE: ${{ steps.verification.outputs.archive }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import zipfile
+
+          from pathlib import Path
+
+          with zipfile.ZipFile(os.environ["ARCHIVE"]) as z:
+              notes = [
+                  n for n in z.namelist()
+                  if n.endswith("/RELEASE_NOTES.md")
+              ]
+
+              assert len(notes) == 1
+
+              candidate_notes = z.read(
+                  notes[0]
+              ).decode()
+
+          result = json.load(
+              open("verified-release.json")
+          )
+
+          text = (
+              f'# FunctionGeneratorESP32 v{result["version"]}\n\n'
+              f'Source commit: `{result["source_commit"]}`\n\n'
+              f'Archive SHA-256: `{result["archive_sha256"]}`\n\n'
+              f'Approved by: {result["approved_by"]}\n\n'
+              '## Original candidate notes\n\n'
+              + candidate_notes
+          )
+
+          Path("official-release-notes.md").write_text(text)
+          PY
+
+      - name: Create draft GitHub Release
+        env:
+          ARCHIVE: ${{ steps.verification.outputs.archive }}
+        run: |
+          set -euo pipefail
+
+          APPROVAL="documentation/Releases/v$VERSION/APPROVAL.json"
+
+          gh release create "v$VERSION" \
+            "$ARCHIVE" \
+            "$APPROVAL" \
+            verified-release.json \
+            --verify-tag \
+            --draft \
+            --title "FunctionGeneratorESP32 v$VERSION" \
+            --notes-file official-release-notes.md

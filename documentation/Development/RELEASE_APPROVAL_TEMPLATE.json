@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "firmware_version": "",
+  "source_commit": "",
+  "candidate_run_id": "",
+  "candidate_run_attempt": 1,
+  "archive_sha256": "",
+  "hardware_validation": "pending",
+  "documentation_review": "pending",
+  "license_review": "pending",
+  "decision": "pending",
+  "approved_by": "",
+  "approved_at_utc": "",
+  "validation_evidence": ""
+}

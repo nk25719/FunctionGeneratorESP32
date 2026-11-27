@@ -82,3 +82,50 @@ replaced.
 
 Corrections require a new version or an explicitly
 documented release withdrawal.
+
+## Official release automation
+
+Official releases are prepared by the Official Release
+GitHub Actions workflow.
+
+### Required inputs
+
+- Firmware version.
+- Successful Release Candidate workflow run ID.
+- Candidate workflow run attempt.
+- Reviewed release approval record.
+
+### Approval record
+
+Store the approval record at:
+
+    documentation/Releases/vX.Y.Z/APPROVAL.json
+
+The record must identify the exact candidate archive,
+source commit, checksum, validation evidence and
+maintainer approval.
+
+### Publication
+
+1. Complete hardware validation.
+2. Confirm licensing and documentation.
+3. Submit the approval record through a pull request.
+4. Merge the approved record.
+5. Run the Official Release workflow from main.
+6. Complete the production-release environment approval.
+7. Review the generated annotated tag and draft release.
+8. Publish the draft only after final review.
+
+The workflow publishes the original candidate archive.
+It must not rebuild approved firmware.
+
+The release tag identifies the candidate source commit,
+not the later approval-record commit.
+
+### Recovery
+
+If a tag is created but draft release creation fails,
+a maintainer must inspect the existing tag and candidate
+before manually completing the release.
+
+Never delete or move a published release tag silently.
